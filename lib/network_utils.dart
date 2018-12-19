@@ -1,11 +1,11 @@
+library network_utils;
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_app/common/functions/getToken.dart';
-import 'package:flutter_app/common/functions/saveUserToken.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/common/functions/showDialogSingleButton.dart';
-
+import 'cache_utils.dart';
+import 'dialog_utils.dart';
 class NetworkUtil {
   // 单例模式
   static NetworkUtil _instance = new NetworkUtil.internal();
@@ -15,7 +15,7 @@ class NetworkUtil {
   Future<dynamic> get(BuildContext context, String url) async {
     Map<String, String> headers = {};
 
-    await getToken().then((result) {
+    await getCache('jwt-token').then((result) {
       headers['Authorization'] = result;
     });
 
@@ -25,7 +25,7 @@ class NetworkUtil {
       print("请求接口${url}，请求头${headers},响应头${response.headers}，响应结果${response.body}");
       // 如果包含Token ，那么更新TOKEN
       if (response.headers.containsKey('authorization')) {
-        saveUserToken(response.headers['authorization']);
+        setCache('jwt-token',response.headers['authorization']);
       }
       // 如果Token 过期，强制跳转到登陆页面
       if (statusCode == 401) {
@@ -49,7 +49,7 @@ class NetworkUtil {
 
   Future<dynamic> post(BuildContext context, String url,
       {Map headers, body, encoding}) async {
-    await getToken().then((result) {
+    await getCache('jwt-token').then((result) {
       headers['Authorization'] = result;
     });
 
@@ -60,7 +60,7 @@ class NetworkUtil {
       print("请求接口${url}，请求头${headers}，请求body:${body}，响应头${response.headers}，响应结果${response.body}");
       // 如果包含Token ，那么更新TOKEN
       if (response.headers.containsKey('authorization')) {
-        saveUserToken(response.headers['authorization']);
+         setCache('jwt-token',response.headers['authorization']);
       }
       // 如果Token 过期，强制跳转到登陆页面
       if (statusCode == 401) {
@@ -85,7 +85,7 @@ class NetworkUtil {
   Future<dynamic> upload(
       BuildContext context, String url, List<http.MultipartFile > imageFileList,
       {Map headers, body, encoding}) async {
-    await getToken().then((result) {
+      await getCache('jwt-token').then((result) {
       headers['Authorization'] = result;
     });
 
@@ -120,7 +120,7 @@ class NetworkUtil {
       final int statusCode = responseStream.statusCode;
       // 如果包含Token ，那么更新TOKEN
       if (responseStream.headers.containsKey('authorization')) {
-        saveUserToken(responseStream.headers['authorization']);
+       setCache('jwt-token',responseStream.headers['authorization']);
       }
       // 如果Token 过期，强制跳转到登陆页面
       if (statusCode == 401) {
